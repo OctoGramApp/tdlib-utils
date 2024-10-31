@@ -1872,7 +1872,7 @@ fun Thumbnail?.toPhotoSize (): PhotoSize? {
 fun toPhoto (vararg array: PhotoSize?): Photo? {
   val filtered = array.filterNotNull().toTypedArray()
   return filtered.takeIf { it.isNotEmpty() }?.let {
-    Photo(false, null, filtered)
+    Photo(false, null, 0, filtered)
   }
 }
 
@@ -1901,6 +1901,7 @@ fun ChatPhoto?.toPhoto (): Photo? {
     Photo(
       false,
       it.minithumbnail,
+      it.dcId,
       it.sizes
     )
   }
