@@ -279,11 +279,13 @@ fun ChatPhoto?.equalsTo(other: ChatPhoto?): Boolean = this.safeEqualsTo(other) {
       this.sizes,
       this.animation,
       this.smallAnimation,
-      this.sticker
+      this.sticker,
+      this.dcId
     )
   }
   this.id == b.id &&
   this.addedDate == b.addedDate &&
+  this.dcId == b.dcId &&
   this.minithumbnail.equalsTo(b.minithumbnail) &&
   this.sizes.equalsTo(b.sizes) &&
   this.animation.equalsTo(b.animation) &&
@@ -413,10 +415,12 @@ fun Photo?.equalsTo(other: Photo?): Boolean = this.safeEqualsTo(other) { b ->
     Photo(
       this.hasStickers,
       this.minithumbnail,
+      this.dcId,
       this.sizes
     )
   }
   this.hasStickers == b.hasStickers &&
+  this.dcId == b.dcId &&
   this.minithumbnail.equalsTo(b.minithumbnail) &&
   this.sizes.equalsTo(b.sizes)
 }
