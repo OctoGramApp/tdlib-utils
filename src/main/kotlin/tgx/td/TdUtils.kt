@@ -678,7 +678,7 @@ fun MessageContent?.showCaptionAboveMedia (): Boolean {
     MessageVoiceNote.CONSTRUCTOR,
     MessageAudio.CONSTRUCTOR -> false
     else -> {
-      assertMessageContent_91c1e338()
+      assertMessageContent_640c68ad()
       false
     }
   }
@@ -1125,9 +1125,9 @@ fun User?.hasUsername (): Boolean = this?.usernames.hasUsername()
 @JvmOverloads fun Supergroup?.findUsernameByPrefix (usernamePrefix: String, allowDisabled: Boolean = false): Boolean = this?.usernames.findUsernameByPrefix(usernamePrefix, allowDisabled)
 
 @JvmOverloads
-fun buildOutline(sticker: Sticker?, targetWidth: Float, targetHeight: Float = targetWidth, out: Path? = null): Path? {
-  return if (sticker != null) {
-    buildOutline(sticker.outline, sticker.width, sticker.height, targetWidth, targetHeight, out)
+fun buildOutline(outline: Outline?, sticker: Sticker?, targetWidth: Float, targetHeight: Float = targetWidth, out: Path? = null): Path? {
+  return if (outline != null && sticker != null) {
+    buildOutline(outline.paths, sticker.width, sticker.height, targetWidth, targetHeight, out)
   } else {
     out
   }
@@ -1406,11 +1406,12 @@ fun PushMessageContent.getText (): String? {
     PushMessageContentPremiumGiftCode.CONSTRUCTOR,
     PushMessageContentGiveaway.CONSTRUCTOR,
     PushMessageContentPaidMedia.CONSTRUCTOR,
-    PushMessageContentGift.CONSTRUCTOR ->
+    PushMessageContentGift.CONSTRUCTOR,
+    PushMessageContentUpgradedGift.CONSTRUCTOR ->
       null
     // unsupported
     else -> {
-      assertPushMessageContent_c163df58()
+      assertPushMessageContent_7e58be7d()
       throw unsupported(this)
     }
   }
@@ -1475,15 +1476,41 @@ fun PushMessageContent.isPinned (): Boolean = when (this.constructor) {
   PushMessageContentMessageForwards.CONSTRUCTOR,
   PushMessageContentMediaAlbum.CONSTRUCTOR,
   PushMessageContentPremiumGiftCode.CONSTRUCTOR,
-  PushMessageContentGift.CONSTRUCTOR ->
+  PushMessageContentGift.CONSTRUCTOR,
+  PushMessageContentUpgradedGift.CONSTRUCTOR ->
     false
 
   // unsupported
   else -> {
-    assertPushMessageContent_c163df58()
+    assertPushMessageContent_7e58be7d()
     throw unsupported(this)
   }
 }
+
+fun User?.isScam (): Boolean = this?.verificationStatus?.isScam ?: false
+fun User?.isFake (): Boolean = this?.verificationStatus?.isFake ?: false
+fun User?.isVerified (): Boolean = this?.verificationStatus?.isVerified ?: false
+
+fun Supergroup?.isScam (): Boolean = this?.verificationStatus?.isScam ?: false
+fun Supergroup?.isFake (): Boolean = this?.verificationStatus?.isFake ?: false
+fun Supergroup?.isVerified (): Boolean = this?.verificationStatus?.isVerified ?: false
+
+fun EmojiStatus?.customEmojiId (): Long = this?.type?.let {
+  when (it.constructor) {
+    EmojiStatusTypeCustomEmoji.CONSTRUCTOR -> {
+      require(it is EmojiStatusTypeCustomEmoji)
+      it.customEmojiId
+    }
+    EmojiStatusTypeUpgradedGift.CONSTRUCTOR -> {
+      require(it is EmojiStatusTypeUpgradedGift)
+      it.modelCustomEmojiId
+    }
+    else -> {
+      assertEmojiStatusType_acfd58c8()
+      throw unsupported(it)
+    }
+  }
+} ?: 0L
 
 fun AvailableReactions.isAvailable (reactionType: ReactionType): Boolean {
   if (isEmpty())
@@ -1526,6 +1553,7 @@ fun Array<AvailableReaction>.hasNonPremiumReactions (): Boolean {
 fun newSendOptions (disableNotification: Boolean = false,
                     fromBackground: Boolean = false,
                     protectContent: Boolean = false,
+                    allowPaidBroadcast: Boolean = false,
                     updateOrderOfInstalledStickerSets: Boolean = false,
                     schedulingState: MessageSchedulingState? = null,
                     effectId: Long = 0,
@@ -1535,6 +1563,7 @@ fun newSendOptions (disableNotification: Boolean = false,
     disableNotification,
     fromBackground,
     protectContent,
+    allowPaidBroadcast,
     updateOrderOfInstalledStickerSets,
     schedulingState,
     effectId,
@@ -1848,6 +1877,12 @@ fun Array<EmojiKeyword>.findUniqueEmojis (): Array<String> {
     emojis.add(it.emoji)
   }
   return emojis.toTypedArray()
+}
+
+fun Thumbnail?.toPhoto (minithumbnail: Minithumbnail?): Photo? {
+  return this.toPhotoSize()?.let {
+    Photo(false, minithumbnail, arrayOf(it))
+  }
 }
 
 fun Thumbnail?.toPhotoSize (): PhotoSize? {
